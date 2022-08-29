@@ -33,7 +33,7 @@ var sdl_window2 *sdl.Window
 var DEBUG_WINDOW bool = false
 var SERVER_MODE bool = false
 
-var scale = uint(3)
+var SCALE = uint(3)
 
 func responseMap(w http.ResponseWriter, r *http.Request) {
 	(w).Header().Set("Access-Control-Allow-Origin", "*")
@@ -64,7 +64,7 @@ func Run() {
 
 	var err error
 	sdl_window, err = sdl.CreateWindow("Gampboy Emulator", sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED,
-		int32(WIDTH*scale), int32(HEIGHT*scale), sdl.WINDOW_SHOWN)
+		int32(WIDTH*SCALE), int32(HEIGHT*SCALE), sdl.WINDOW_SHOWN)
 	if err != nil {
 		panic(err)
 	}
@@ -77,7 +77,7 @@ func Run() {
 	sdl_surface.FillRect(nil, 0)
 
 	if DEBUG_WINDOW {
-		sdl_window2, err = sdl.CreateWindow("test2", sdl.WINDOWPOS_CENTERED, sdl.WINDOWPOS_CENTERED, int32(DEBUG_W*scale), int32(DEBUG_H*scale), sdl.WINDOW_SHOWN)
+		sdl_window2, err = sdl.CreateWindow("test2", sdl.WINDOWPOS_CENTERED, sdl.WINDOWPOS_CENTERED, int32(DEBUG_W*SCALE), int32(DEBUG_H*SCALE), sdl.WINDOW_SHOWN)
 		sdl_window2.SetPosition(0, 0)
 		if err != nil {
 			panic(err)
@@ -203,11 +203,11 @@ func Run() {
 }
 
 func ColorPixel(x uint, y uint, color uint32) {
-	rect := sdl.Rect{X: int32(x), Y: int32(y), W: int32(scale), H: int32(scale)}
+	rect := sdl.Rect{X: int32(x * SCALE), Y: int32(y * SCALE), W: int32(SCALE), H: int32(SCALE)}
 	sdl_surface.FillRect(&rect, color)
 }
 func ColorPixel2(x uint, y uint, color uint32) {
-	rect := sdl.Rect{X: int32(x), Y: int32(y), W: int32(scale), H: int32(scale)}
+	rect := sdl.Rect{X: int32(x), Y: int32(y), W: int32(SCALE), H: int32(SCALE)}
 	sdl_surface2.FillRect(&rect, color)
 }
 
@@ -225,7 +225,7 @@ func ShowTile(base uint, base_x uint, base_y uint) {
 	tile := ppu.GetTileData(base)
 	for x := uint(0); x < uint(len(tile)); x++ {
 		for y := uint(0); y < uint(len(tile[x])); y++ {
-			ColorPixel2(base_x+x*scale, base_y+y*scale, ppu.GetBGColor(tile[x][y]))
+			ColorPixel2(base_x+x*SCALE, base_y+y*SCALE, ppu.GetBGColor(tile[x][y]))
 		}
 	}
 }
@@ -238,12 +238,12 @@ func UpdateGUI() {
 	for _y = uint(0); _y < 24; _y++ {
 		// ShowTile(addr+(y*16), x_d, y_d)
 		for _x = uint(0); _x < 16; _x++ {
-			ShowTile(addr+tile_n*16, x_d+_x*scale, y_d+_y*scale)
-			x_d += 8 * scale
+			ShowTile(addr+tile_n*16, x_d+_x*SCALE, y_d+_y*SCALE)
+			x_d += 8 * SCALE
 			tile_n++
 		}
 		x_d = 0
-		y_d += 8 * scale
+		y_d += 8 * SCALE
 	}
 	RefreshGUI2()
 }
@@ -257,12 +257,12 @@ func UpdateGUI2() {
 		// ShowTile(addr+(y*16), x_d, y_d)
 		for _x = uint(0); _x < 32; _x++ {
 			tile_n = uint(ppu.ReadFromVRAMMemory(0x9800+tile_index, 0))
-			ShowTile(addr+tile_n*16, x_d+_x*scale, y_d+_y*scale)
-			x_d += 8 * scale
+			ShowTile(addr+tile_n*16, x_d+_x*SCALE, y_d+_y*SCALE)
+			x_d += 8 * SCALE
 			tile_index++
 		}
 		x_d = 0
-		y_d += 8 * scale
+		y_d += 8 * SCALE
 	}
 	RefreshGUI2()
 }
@@ -271,7 +271,7 @@ func UpdateGUI3() {
 	video_buffer = ppu.FetcherGetBuffer()
 	for x := uint(0); x < 160; x++ {
 		for y := uint(0); y < 144; y++ {
-			ColorPixel(x*scale, y*scale, video_buffer[x][y])
+			ColorPixel(x, y, video_buffer[x][y])
 		}
 	}
 	RefreshGUI()

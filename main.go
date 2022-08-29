@@ -28,6 +28,7 @@ func Init() {
 	window_debug := flag.Bool("wd", false, "Window debug enabled")
 	manual := flag.Bool("m", false, "Manual Mode")
 	server := flag.Bool("s", false, "Server Mode")
+	scale := flag.Int("sc", 3, "Scale")
 	flag.Parse()
 
 	cpu.DEBUG = *debug
@@ -77,6 +78,7 @@ func Init() {
 
 	gui.DEBUG_WINDOW = *window_debug
 	gui.SERVER_MODE = *server
+	gui.SCALE = uint(*scale)
 	gui.Init()
 }
 
