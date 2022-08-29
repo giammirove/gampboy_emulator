@@ -35,7 +35,7 @@ func Init() {
 	if *name == "" {
 		fmt.Printf("!!! ROM not found, opening dialog\n")
 		var err error
-		*name, err = dialog.File().Title("Choose the ROM").Filter("gbc", "gb").Load()
+		*name, err = dialog.File().Title("Choose the ROM").Filter("rom", "gb", "gbc").Load()
 		if err != nil {
 			fmt.Printf("A ROM path is required !!!\n")
 			flag.PrintDefaults()
