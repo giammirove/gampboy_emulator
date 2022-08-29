@@ -3,7 +3,7 @@ package ppu
 import (
 	"log"
 
-	"github.com/giammirove/gbemu/internal/utility"
+	"github.com/giammirove/gampboy_emulator/internal/utility"
 )
 
 var _COLORS [4]uint32 = [4]uint32{0xFFFFFFFF, 0xFFAAAAAA, 0xFF555555, 0xFF000000}

@@ -1,11 +1,10 @@
 package ppu
 
 import (
-	"container/list"
 	"log"
 
-	"github.com/giammirove/gbemu/internal/headers"
-	"github.com/giammirove/gbemu/internal/utility"
+	"github.com/giammirove/gampboy_emulator/internal/headers"
+	"github.com/giammirove/gampboy_emulator/internal/utility"
 )
 
 // thanks to
@@ -76,7 +75,11 @@ var buffered_x uint8
 var fifo_x uint8
 
 var bg_pixels [_PIXELS_LEN]uint
-var fifo *list.List
+
+var fifo_array [_LCD_WIDTH * _LCD_HEIGHT]uint32
+var fifo_len uint
+var fifo_front uint
+var fifo_back uint
 
 var sprite_pixels [_SPRITES_PER_PIXEL][_PIXELS_LEN]uint
 
@@ -100,7 +103,9 @@ var ticks uint
 var window_line_counter uint8
 
 func InitFetcher() {
-	fifo = list.New()
+	fifo_len = 0
+	fifo_front = 0
+	fifo_back = 0
 	window_line_counter = 0
 	line_x = 0
 	fetcher_x = 0
@@ -124,6 +129,10 @@ func FetcherStart() {
 	bg_tilemap = _TILEMAP_SECONDARY
 	window_tilemap = _TILEMAP_SECONDARY
 
+	fifo_len = 0
+	fifo_front = 0
+	fifo_back = 0
+
 	sprite_tiles = []sprite_t{}
 	bg_transparent = [_LCD_WIDTH]bool{}
 	bg_priority = [_LCD_WIDTH]bool{}
@@ -133,10 +142,9 @@ func FetcherOamLoad() {
 	loadSpritePerLine()
 }
 func FetcherClearFIFO() {
-	l := fifo.Len()
-	for i := 0; i < l; i++ {
-		fifo.Remove(fifo.Front())
-	}
+	fifo_len = 0
+	fifo_back = 0
+	fifo_front = 0
 }
 
 func GetTileAddr() uint {
@@ -266,7 +274,7 @@ func fetcherCycle() {
 	// 	break
 	case _FETCHER_STATE_PUSH:
 		// no space left
-		if fifo.Len() > 8 {
+		if fifo_len > 8 {
 			return
 		}
 		// TODO: is this necessary
@@ -295,7 +303,9 @@ func fetcherCycle() {
 					color = fetcherGetSpritePixel(i, bg_pixels[bg_i], color, bg_priority)
 				}
 
-				fifo.PushBack(color)
+				fifo_array[fifo_back] = color
+				fifo_len++
+				fifo_back++
 				fifo_x++
 			}
 		} else {
@@ -367,7 +377,7 @@ func fetcherGetSpritePixel(index int, bg_color_index uint, bg_color uint32, bg_p
 }
 
 func fetcherPixelPush() {
-	if fifo.Len() > _FIFO_MAX_LEN {
+	if fifo_len > _FIFO_MAX_LEN {
 		pixel := FetcherFIFOPop()
 		if line_x >= uint8(GetSCX())%8 {
 			buffer[buffered_x][GetLY()] = pixel
@@ -447,11 +457,19 @@ func getSpriteTiles() []sprite_t {
 }
 
 func FetcherFIFOPop() uint32 {
-	if fifo.Len() == 0 {
+	// if fifo.Len() == 0 {
+	// 	log.Fatal("fifo is empty")
+	// }
+	//
+	// return fifo.Remove(fifo.Front()).(uint32)
+	if fifo_len == 0 {
 		log.Fatal("fifo is empty")
 	}
 
-	return fifo.Remove(fifo.Front()).(uint32)
+	fifo_len--
+	r := fifo_array[fifo_front]
+	fifo_front++
+	return r
 }
 
 func DrawScanline() {
@@ -472,11 +490,14 @@ func renderBG() {
 	if GetLCDCBGTileMapDisplayArea() {
 		tilemap = _TILEMAP_SECONDARY
 	}
+	if ly >= 144 {
+		return
+	}
 	tiledata := _TILE_DATA_AREA_SECONDARY
 	for x := 0; x < _LCD_WIDTH; x += 8 {
 		map_x := ((x + scx) % 256) / 8
 		map_y := ((ly + scy) % 256) / 8
-		tile_y := (ly + scy) % 8
+		tile_y := (ly + scy) % 256 % 8
 		tile_addr := tilemap + uint(map_y*32+map_x)
 		tile_id = ReadFromVRAMMemory(tile_addr, 0)
 		if !GetLCDCBGWinTileDataArea() {
@@ -525,6 +546,9 @@ func renderWindow() {
 	wy := int(GetWY())
 	// no window
 	if ly < wy || wx > _WX_MAX {
+		return
+	}
+	if ly >= 144 {
 		return
 	}
 	wx -= 7
@@ -589,6 +613,9 @@ func renderSprites() {
 	}
 	loaded := uint(0)
 	ly := int(GetLY())
+	if ly >= 144 {
+		return
+	}
 	height := 8
 	if GetLCDCOBJSize() {
 		height = 16

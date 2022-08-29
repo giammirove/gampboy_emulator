@@ -3,7 +3,7 @@ package ppu
 import (
 	"log"
 
-	"github.com/giammirove/gbemu/internal/interrupts"
+	"github.com/giammirove/gampboy_emulator/internal/interrupts"
 )
 
 const _TOTAL_DOTS = 456
@@ -218,6 +218,7 @@ func LCDTick() {
 			FetcherTick()
 
 			if FetcherGetPushedX() >= 160 || current_dots >= 289 {
+				// DrawScanline()
 				FetcherClearFIFO()
 				SetSTATModeHBlank()
 				// TODO: check if necessary

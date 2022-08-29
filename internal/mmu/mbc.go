@@ -1,12 +1,13 @@
 package mmu
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"time"
 
-	"github.com/giammirove/gbemu/internal/headers"
-	"github.com/giammirove/gbemu/internal/ppu"
+	"github.com/giammirove/gampboy_emulator/internal/headers"
+	"github.com/giammirove/gampboy_emulator/internal/ppu"
 )
 
 // same for MBC1 , MBC3 (also for timer)
@@ -87,22 +88,22 @@ func InitMBC() {
 func loadMemory() {
 	memory, err := ioutil.ReadFile(rom_memory_path)
 	if err != nil || len(memory) == 0 {
-		log.Printf("Error during loading previous games")
+		fmt.Printf("Error during loading previous games")
 		return
 	}
 	ERAM_BANKS = memory
-	log.Printf("!! Saves successfully loaded")
+	fmt.Printf("!!! Saves successfully loaded\n")
 }
 func SaveMemory() {
 	if save_needed {
-		// log.Printf("!! Saving ... \n")
+		// fmt.Printf("!! Saving ... \n")
 		err := ioutil.WriteFile(rom_memory_path, ERAM_BANKS, 0666)
 		if err != nil {
-			log.Printf("Error during saving games")
+			fmt.Printf("Error during saving games")
 			return
 		}
 		save_needed = false
-		// log.Printf("!! Successfully saved \n")
+		// fmt.Printf("!! Successfully saved \n")
 	}
 
 }

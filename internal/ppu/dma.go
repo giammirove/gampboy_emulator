@@ -1,7 +1,7 @@
 package ppu
 
 import (
-	"github.com/giammirove/gbemu/internal/headers"
+	"github.com/giammirove/gampboy_emulator/internal/headers"
 )
 
 var ReadFromMemory func(addr uint, bytes ...uint) uint

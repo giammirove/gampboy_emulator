@@ -3,13 +3,13 @@ package mmu
 import (
 	"log"
 
-	"github.com/giammirove/gbemu/internal/interrupts"
-	"github.com/giammirove/gbemu/internal/joypad"
-	"github.com/giammirove/gbemu/internal/ppu"
-	"github.com/giammirove/gbemu/internal/serial"
-	"github.com/giammirove/gbemu/internal/sound"
-	"github.com/giammirove/gbemu/internal/timer"
-	"github.com/giammirove/gbemu/internal/utility"
+	"github.com/giammirove/gampboy_emulator/internal/interrupts"
+	"github.com/giammirove/gampboy_emulator/internal/joypad"
+	"github.com/giammirove/gampboy_emulator/internal/ppu"
+	"github.com/giammirove/gampboy_emulator/internal/serial"
+	"github.com/giammirove/gampboy_emulator/internal/sound"
+	"github.com/giammirove/gampboy_emulator/internal/timer"
+	"github.com/giammirove/gampboy_emulator/internal/utility"
 )
 
 type memory_region struct {

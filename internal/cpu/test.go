@@ -3,8 +3,8 @@ package cpu
 import (
 	"fmt"
 
-	decoder "github.com/giammirove/gbemu/internal/decoder"
-	registers "github.com/giammirove/gbemu/internal/registers"
+	decoder "github.com/giammirove/gampboy_emulator/internal/decoder"
+	registers "github.com/giammirove/gampboy_emulator/internal/registers"
 )
 
 func Test() {

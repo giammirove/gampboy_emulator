@@ -3,9 +3,9 @@ package timer
 import (
 	"log"
 
-	"github.com/giammirove/gbemu/internal/headers"
-	"github.com/giammirove/gbemu/internal/interrupts"
-	"github.com/giammirove/gbemu/internal/utility"
+	"github.com/giammirove/gampboy_emulator/internal/headers"
+	"github.com/giammirove/gampboy_emulator/internal/interrupts"
+	"github.com/giammirove/gampboy_emulator/internal/utility"
 )
 
 var registers []uint

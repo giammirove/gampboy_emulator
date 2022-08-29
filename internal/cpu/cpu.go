@@ -5,13 +5,13 @@ import (
 	"log"
 	"strings"
 
-	decoder "github.com/giammirove/gbemu/internal/decoder"
-	"github.com/giammirove/gbemu/internal/interrupts"
-	"github.com/giammirove/gbemu/internal/mmu"
-	"github.com/giammirove/gbemu/internal/ppu"
-	registers "github.com/giammirove/gbemu/internal/registers"
-	"github.com/giammirove/gbemu/internal/timer"
-	"github.com/giammirove/gbemu/internal/utility"
+	decoder "github.com/giammirove/gampboy_emulator/internal/decoder"
+	"github.com/giammirove/gampboy_emulator/internal/interrupts"
+	"github.com/giammirove/gampboy_emulator/internal/mmu"
+	"github.com/giammirove/gampboy_emulator/internal/ppu"
+	registers "github.com/giammirove/gampboy_emulator/internal/registers"
+	"github.com/giammirove/gampboy_emulator/internal/timer"
+	"github.com/giammirove/gampboy_emulator/internal/utility"
 )
 
 const _LD = "LD"

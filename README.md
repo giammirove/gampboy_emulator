@@ -74,7 +74,7 @@ What have I learned?
 #### Thanks to
 
 - http://imrannazar.com/GameBoy-Emulation-in-JavaScript
-- https://github.com/rockytriton/LLD_gbemu
+- https://github.com/rockytriton/LLD_gampboy_emulator
 - https://github.com/retrio/gb-test-roms
 - https://gbdev.io/
 - https://ia903208.us.archive.org/9/items/GameBoyProgManVer1.1/GameBoyProgManVer1.1.pdf

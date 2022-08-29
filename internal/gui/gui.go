@@ -2,10 +2,12 @@ package gui
 
 import (
 	"fmt"
+	"log"
+	"net/http"
 
-	"github.com/giammirove/gbemu/internal/headers"
-	"github.com/giammirove/gbemu/internal/joypad"
-	"github.com/giammirove/gbemu/internal/ppu"
+	"github.com/giammirove/gampboy_emulator/internal/headers"
+	"github.com/giammirove/gampboy_emulator/internal/joypad"
+	"github.com/giammirove/gampboy_emulator/internal/ppu"
 	"github.com/veandco/go-sdl2/sdl"
 )
 
@@ -15,6 +17,9 @@ const DEBUG_W = 144
 const DEBUG_H = 216
 const WIDTH = uint(160)
 const HEIGHT = uint(144)
+
+var video_buffer [WIDTH][HEIGHT]uint32
+var prev_frame = 0
 
 // var context *cairo.Context
 // var is_context bool
@@ -26,8 +31,30 @@ var sdl_surface2 *sdl.Surface
 var sdl_window2 *sdl.Window
 
 var DEBUG_WINDOW bool = false
+var SERVER_MODE bool = false
 
 var scale = uint(3)
+
+func responseMap(w http.ResponseWriter, r *http.Request) {
+	(w).Header().Set("Access-Control-Allow-Origin", "*")
+	for x := 0; x < int(WIDTH); x++ {
+		for y := 0; y < int(HEIGHT); y++ {
+			fmt.Fprintf(w, "%08X", video_buffer[x][y])
+			if y < int(HEIGHT)-1 {
+				fmt.Fprintf(w, " ")
+			}
+		}
+		fmt.Fprintf(w, "\n")
+	}
+}
+func Init() {
+	if SERVER_MODE {
+		go func() {
+			http.HandleFunc("/map", responseMap)
+			log.Fatal(http.ListenAndServe(":8080", nil))
+		}()
+	}
+}
 
 func Run() {
 	if err := sdl.Init(sdl.INIT_EVERYTHING); err != nil {
@@ -36,7 +63,7 @@ func Run() {
 	defer sdl.Quit()
 
 	var err error
-	sdl_window, err = sdl.CreateWindow("test", sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED,
+	sdl_window, err = sdl.CreateWindow("Gampboy Emulator", sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED,
 		int32(WIDTH*scale), int32(HEIGHT*scale), sdl.WINDOW_SHOWN)
 	if err != nil {
 		panic(err)
@@ -69,7 +96,6 @@ func Run() {
 
 	var fps = 0
 	running := true
-	var prev_frame = 0
 	var prev_time uint32
 	for running {
 		if prev_frame != ppu.GetCurrentFrame() {
@@ -82,7 +108,7 @@ func Run() {
 			now := TicksGUI()
 			if now-prev_time >= 1000 {
 				// log.Printf("FPS %d\n", fps)
-				str := fmt.Sprintf("FPS %d - %s", fps, headers.GetTitle())
+				str := fmt.Sprintf("{%d} [%s]", fps, headers.GetTitle())
 				sdl_window.SetTitle(str)
 				prev_time = now
 				fps = 0
@@ -242,10 +268,10 @@ func UpdateGUI2() {
 }
 
 func UpdateGUI3() {
-	buffer := ppu.FetcherGetBuffer()
+	video_buffer = ppu.FetcherGetBuffer()
 	for x := uint(0); x < 160; x++ {
 		for y := uint(0); y < 144; y++ {
-			ColorPixel(x*scale, y*scale, buffer[x][y])
+			ColorPixel(x*scale, y*scale, video_buffer[x][y])
 		}
 	}
 	RefreshGUI()

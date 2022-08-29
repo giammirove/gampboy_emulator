@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/giammirove/gbemu/internal/headers"
+	"github.com/giammirove/gampboy_emulator/internal/headers"
 )
 
 // the underscore before avoid exposing this constants

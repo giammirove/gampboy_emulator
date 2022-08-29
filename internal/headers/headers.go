@@ -1,9 +1,10 @@
 package headers
 
 import (
+	"fmt"
 	"log"
 
-	"github.com/giammirove/gbemu/internal/utility"
+	"github.com/giammirove/gampboy_emulator/internal/utility"
 )
 
 const _HEADER_START = 0x0100
@@ -240,21 +241,21 @@ func Init(raw []byte) {
 		log.Fatal("Checksum failed!")
 	}
 
-	log.Printf("%-18s: %s\n", "TITLE", headers.title)
+	fmt.Printf("%-18s: %s\n", "TITLE", headers.title)
 	if headers.cgb_flag == 0xC0 {
-		log.Printf("%-18s: CGB (%02X)\n", "GB TYPE", headers.cgb_flag)
+		fmt.Printf("%-18s: CGB (%02X)\n", "GB TYPE", headers.cgb_flag)
 	} else if headers.cgb_flag == 0x80 {
-		log.Printf("%-18s: CGB but backwards compatible with NON-CGB (%02X)\n", "GB TYPE", headers.cgb_flag)
+		fmt.Printf("%-18s: CGB but backwards compatible with NON-CGB (%02X)\n", "GB TYPE", headers.cgb_flag)
 	} else {
-		log.Printf("%-18s: NON-CGB (%02X)\n", "GB TYPE", headers.cgb_flag)
+		fmt.Printf("%-18s: NON-CGB (%02X)\n", "GB TYPE", headers.cgb_flag)
 	}
-	log.Printf("%-18s: %s (%02X)\n", "NEW LICENSEE CODE", licensee_code_map[headers.new_licensee_code], headers.new_licensee_code)
-	log.Printf("%-18s: %02X\n", "SGB Flag", headers.sgb_flag)
-	log.Printf("%-18s: %s (%02X)\n", "CARTBRIDGE TYPE", cartbridge_type_map[headers.cartridge_type], headers.cartridge_type)
-	log.Printf("%-18s: %d KiB (n. banking %d) (%d)\n", "ROM SIZE", rom_size_map[headers.rom_size].size, rom_size_map[headers.rom_size].banks, headers.rom_size)
-	log.Printf("%-18s: %d KiB (%d)\n", "RAM SIZE", ram_size_map[headers.ram_size], headers.ram_size)
-	log.Printf("%-18s: %s (%d)\n", "DESTINATION CODE", destination_code_map[headers.destination_code], headers.destination_code)
-	log.Printf("---------------------------------------------------------")
+	fmt.Printf("%-18s: %s (%02X)\n", "NEW LICENSEE CODE", licensee_code_map[headers.new_licensee_code], headers.new_licensee_code)
+	fmt.Printf("%-18s: %02X\n", "SGB Flag", headers.sgb_flag)
+	fmt.Printf("%-18s: %s (%02X)\n", "CARTBRIDGE TYPE", cartbridge_type_map[headers.cartridge_type], headers.cartridge_type)
+	fmt.Printf("%-18s: %d KiB (n. banking %d) (%d)\n", "ROM SIZE", rom_size_map[headers.rom_size].size, rom_size_map[headers.rom_size].banks, headers.rom_size)
+	fmt.Printf("%-18s: %d KiB (%d)\n", "RAM SIZE", ram_size_map[headers.ram_size], headers.ram_size)
+	fmt.Printf("%-18s: %s (%d)\n", "DESTINATION CODE", destination_code_map[headers.destination_code], headers.destination_code)
+	fmt.Printf("---------------------------------------------------------\n")
 }
 
 func GetTitle() string {

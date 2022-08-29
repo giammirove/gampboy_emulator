@@ -8,17 +8,18 @@ import (
 	"os"
 	"strings"
 
-	cpu "github.com/giammirove/gbemu/internal/cpu"
-	decoder "github.com/giammirove/gbemu/internal/decoder"
-	"github.com/giammirove/gbemu/internal/gui"
-	"github.com/giammirove/gbemu/internal/headers"
-	"github.com/giammirove/gbemu/internal/interrupts"
-	"github.com/giammirove/gbemu/internal/joypad"
-	mmu "github.com/giammirove/gbemu/internal/mmu"
-	"github.com/giammirove/gbemu/internal/ppu"
-	"github.com/giammirove/gbemu/internal/serial"
-	"github.com/giammirove/gbemu/internal/sound"
-	"github.com/giammirove/gbemu/internal/timer"
+	cpu "github.com/giammirove/gampboy_emulator/internal/cpu"
+	decoder "github.com/giammirove/gampboy_emulator/internal/decoder"
+	"github.com/giammirove/gampboy_emulator/internal/gui"
+	"github.com/giammirove/gampboy_emulator/internal/headers"
+	"github.com/giammirove/gampboy_emulator/internal/interrupts"
+	"github.com/giammirove/gampboy_emulator/internal/joypad"
+	mmu "github.com/giammirove/gampboy_emulator/internal/mmu"
+	"github.com/giammirove/gampboy_emulator/internal/ppu"
+	"github.com/giammirove/gampboy_emulator/internal/serial"
+	"github.com/giammirove/gampboy_emulator/internal/sound"
+	"github.com/giammirove/gampboy_emulator/internal/timer"
+	"github.com/sqweek/dialog"
 )
 
 func Init() {
@@ -26,20 +27,26 @@ func Init() {
 	debug := flag.Bool("d", false, "Debug Mode")
 	window_debug := flag.Bool("wd", false, "Window debug enabled")
 	manual := flag.Bool("m", false, "Manual Mode")
+	server := flag.Bool("s", false, "Server Mode")
 	flag.Parse()
 
 	cpu.DEBUG = *debug
 	cpu.MANUAL = *manual
 	if *name == "" {
-		fmt.Printf("A rom path is required !!!\n")
-		flag.PrintDefaults()
-		os.Exit(1)
+		fmt.Printf("!!! ROM not found, opening dialog\n")
+		var err error
+		*name, err = dialog.File().Title("Choose the ROM").Filter("gbc", "gb").Load()
+		if err != nil {
+			fmt.Printf("A ROM path is required !!!\n")
+			flag.PrintDefaults()
+			os.Exit(1)
+		}
 	}
 
 	path := strings.Trim(string(*name), " ")
 	rom, err := ioutil.ReadFile(path)
 	if err != nil {
-		log.Fatalf("Error with rom\n\t%s", err)
+		log.Fatalf("Error with ROM\n\t%s", err)
 
 	}
 	headers.Init(rom)
@@ -69,6 +76,8 @@ func Init() {
 	interrupts.GetHalted = cpu.GetHalted
 
 	gui.DEBUG_WINDOW = *window_debug
+	gui.SERVER_MODE = *server
+	gui.Init()
 }
 
 func main() {

@@ -3,8 +3,8 @@ package interrupts
 import (
 	"log"
 
-	"github.com/giammirove/gbemu/internal/registers"
-	"github.com/giammirove/gbemu/internal/utility"
+	"github.com/giammirove/gampboy_emulator/internal/registers"
+	"github.com/giammirove/gampboy_emulator/internal/utility"
 )
 
 /**

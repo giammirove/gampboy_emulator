@@ -1,9 +1,9 @@
 package cpu
 
 import (
-	"github.com/giammirove/gbemu/internal/decoder"
-	"github.com/giammirove/gbemu/internal/registers"
-	"github.com/giammirove/gbemu/internal/utility"
+	"github.com/giammirove/gampboy_emulator/internal/decoder"
+	"github.com/giammirove/gampboy_emulator/internal/registers"
+	"github.com/giammirove/gampboy_emulator/internal/utility"
 )
 
 func handleINC(instruction decoder.Instruction_t) {

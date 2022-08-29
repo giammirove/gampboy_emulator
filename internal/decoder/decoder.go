@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log"
 
-	mmu "github.com/giammirove/gbemu/internal/mmu"
+	mmu "github.com/giammirove/gampboy_emulator/internal/mmu"
 )
 
 const OPCODE_JSON_PATH = "./assets/newopcodes.json"
