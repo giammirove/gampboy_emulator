@@ -9,7 +9,6 @@ var ReadFromMemory func(addr uint, bytes ...uint) uint
 var dma_old uint
 var dma_delay uint
 var dma_transferring bool
-var dma_starting bool
 var current_byte uint
 
 var is_new_dma bool
@@ -22,6 +21,7 @@ var new_dma_dest uint
 var new_dma_len uint
 var new_dma_mode uint
 var new_dma_vram_bank uint
+var new_dma_wram_bank uint
 
 func InitDMA() {
 	SetHDMA1(0xFF)
@@ -33,22 +33,23 @@ func InitDMA() {
 
 func HDMAStart() {
 	if headers.IsCGB() {
-		prev_mode := new_dma_mode
 		val := GetHDMA5()
-		new_dma_value = val
 		// TODO : check this one
 		// lcd_registers[_HDMA5-_REGISTER_BASE] = 0
-		new_dma_mode = (val >> 7) & 1
-		// stopping hblank
-		if prev_mode == 1 && new_dma_mode == 0 {
+		tmp_dma_mode := (val >> 7) & 1
+		if new_dma_mode == 1 && !new_dma_transferring {
+			lcd_registers[_HDMA5-_REGISTER_BASE] &= 0x7F
+		} else if new_dma_mode == 1 && tmp_dma_mode == 0 && new_dma_transferring {
 			new_dma_transferring = false
-			// log.Printf("HDMA5 STOP %08b (%d)", val, new_current_byte)
+			// fmt.Printf("HDMA STOP %08b\n", val)
 			lcd_registers[_HDMA5-_REGISTER_BASE] |= 0x80
 			return
 		}
-		// log.Printf("HDMA START %08b", val)
-		new_dma_len = (val&0b1111111 + 1) * 0x10
+		new_dma_value = val
+		new_dma_mode = tmp_dma_mode
+		new_dma_len = (val&0x7F + 1) * 0x10
 		new_dma_vram_bank = GetVRAMBank()
+		new_dma_wram_bank = GetWRAMBank()
 		new_dma_transferring = new_dma_len > 0
 		new_dma_delay = 1
 		new_current_byte = 0
@@ -60,19 +61,15 @@ func HDMAStart() {
 		new_dma_source &= 0xFFF0
 		new_dma_dest &= 0x1FF0
 		new_dma_dest = 0x8000 + new_dma_dest
-		// log.Printf("source %04X\n", new_dma_source)
-		// log.Printf("dest %04X\n", new_dma_dest)
-		// log.Printf("len %d\n", new_dma_len)
-		// log.Printf("general %t\n", IsGDMA())
-		// log.Printf("vbank %d wbank %d\n", new_dma_vram_bank, GetWRAMBank())
-		if new_dma_transferring {
-			if IsGDMA() {
-				GDMATransfer()
-			}
-			if IsHDMA() {
-				HDMATransfer()
-			}
-		}
+		// if new_dma_mode == 1 {
+		// 	fmt.Printf("HDMA START %08b\n", val)
+		// } else {
+		// 	fmt.Printf("GDMA START %08b\n", val)
+		// }
+		// fmt.Printf("%04X -> %04X (%d)\n", new_dma_source, new_dma_dest, new_dma_len)
+		// if new_dma_len == 1024 {
+		// 	utility.WaitHere()
+		// }
 	}
 }
 func HDMASetHighSource(value uint8) {
@@ -102,50 +99,31 @@ func IsHDMATransferring() bool {
 
 func HDMATransfer() {
 	if IsHDMATransferring() {
-		if new_dma_delay > 0 {
-			new_dma_delay--
-			return
-		}
 		if GetVRAMBank() != new_dma_vram_bank {
 			return
 		}
 		for i := 0; i < 0x10; i++ {
-			b := byte(ReadFromMemory(new_dma_source + new_current_byte))
-
-			WriteToVRAMMemory(new_dma_dest+new_current_byte, b, new_dma_vram_bank)
-
-			new_current_byte++
-			updateHDMARegisters()
-
-			new_dma_transferring = new_current_byte < new_dma_len
-			if !new_dma_transferring {
-				ResetHDM5()
-				return
-			}
+			newDMATransfer()
 		}
 
 	}
 }
 func GDMATransfer() {
 	if IsGDMATransferring() {
-		if new_dma_delay > 0 {
-			new_dma_delay--
-			return
-		}
-		if GetVRAMBank() != new_dma_vram_bank {
-			return
-		}
-		b := byte(ReadFromMemory(new_dma_source + new_current_byte))
+		newDMATransfer()
+	}
+}
+func newDMATransfer() {
+	b := byte(ReadFromMemory(new_dma_source + new_current_byte))
 
-		WriteToVRAMMemory(new_dma_dest+new_current_byte, b, new_dma_vram_bank)
+	WriteToVRAMMemory(new_dma_dest+new_current_byte, b)
 
-		new_current_byte++
-		updateHDMARegisters()
+	new_current_byte++
+	updateHDMARegisters()
 
-		new_dma_transferring = new_current_byte < new_dma_len
-		if !new_dma_transferring {
-			ResetHDM5()
-		}
+	new_dma_transferring = new_current_byte < new_dma_len
+	if !new_dma_transferring {
+		ResetHDM5()
 	}
 }
 func updateHDMARegisters() {
@@ -155,9 +133,9 @@ func updateHDMARegisters() {
 	if leng < 0 {
 		leng = 0
 	}
-	SetHDMA1(src & 0xFF00 >> 8)
+	SetHDMA1(src >> 8)
 	SetHDMA2(src & 0xFF)
-	SetHDMA3(dst & 0xFF00 >> 8)
+	SetHDMA3(dst >> 8)
 	SetHDMA4(dst & 0xFF)
 	UpdateDMALength(uint(leng))
 }
@@ -168,7 +146,6 @@ func DMAStart() {
 	if dma_old > 0xDF00 {
 		dma_old -= 0x2000
 	}
-	dma_starting = false
 	dma_delay = 2
 	// log.Printf("DMA START %04X", dma_old)
 }
@@ -178,7 +155,6 @@ func DMATransfer() {
 	}
 	b := byte(ReadFromMemory(dma_old + current_byte))
 	WriteToOAMMemory(0xFE00+current_byte, b)
-	// log.Printf("[%d] dma write to %04X (%04X)", current_byte, 0xFE00+current_byte, b)
 
 	lcd_registers[_DMA-_REGISTER_BASE] = (dma_old + current_byte) >> 8
 
@@ -186,23 +162,15 @@ func DMATransfer() {
 
 	// since dma transfers to 0xFE00 - 0xFE9F ( so 0x9F bytes )
 	dma_transferring = current_byte <= 0x9F
-	if !dma_transferring {
-		// log.Printf("DMA END")
-	}
 }
 
 func DMATick() {
 	if dma_delay > 0 {
 		dma_delay--
 		if dma_delay == 0 {
-			dma_starting = true
+			current_byte = 0
+			dma_transferring = true
 		}
-	}
-	if dma_starting {
-		dma_starting = false
-		current_byte = 0
-		dma_transferring = true
-		// log.Printf("DMA TRANSFERRING")
 	}
 
 	DMATransfer()

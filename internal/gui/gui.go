@@ -123,14 +123,14 @@ func Run() {
 			case *sdl.KeyboardEvent:
 				ev := event.(*sdl.KeyboardEvent)
 				switch ev.Keysym.Scancode {
-				case sdl.SCANCODE_RETURN:
+				case sdl.SCANCODE_RETURN, sdl.SCANCODE_L:
 					if ev.Type == sdl.KEYDOWN {
 						joypad.SetJoypadStart()
 					} else {
 						joypad.ClearJoypadStart()
 					}
 					break
-				case sdl.SCANCODE_SPACE:
+				case sdl.SCANCODE_SPACE, sdl.SCANCODE_H:
 					if ev.Type == sdl.KEYDOWN {
 						joypad.SetJoypadSelect()
 					} else {

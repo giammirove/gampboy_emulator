@@ -118,7 +118,6 @@ func WriteToLCDMemory(addr uint, value uint) {
 	}
 	// }
 
-	prev_enable := GetLCDCEnable()
 	if addr >= _BGPI {
 		addr -= _LCD_CGB_REGISTER_OFFSET
 	}
@@ -134,10 +133,6 @@ func WriteToLCDMemory(addr uint, value uint) {
 		} else {
 			// otherwise first time this check will be skipped
 			updateLYFlag()
-		}
-		if prev_enable != GetLCDCEnable() {
-			SetLY(0)
-			current_dots = 0
 		}
 	}
 
@@ -161,75 +156,81 @@ var TicksGUI func() uint32
 var wait uint = 0
 
 func LCDTick() {
-	if GetLCDCEnable() {
-		current_dots++
-		mode := GetModeSTAT()
-		switch mode {
-		case _MODE_HBLANK:
-			if current_dots >= _DOTS_PER_LINE {
-				IncrementLY()
-				current_dots = 0
-				if GetLY() >= _LY_VBLANK_START {
-					SetSTATModeVBlank()
-					interrupts.RequestInterruptVBlank()
-					if GetSTATINTVBlank() {
-						interrupts.RequestInterruptSTAT()
-					}
-					current_frame++
-					// ticks := TicksGUI()
-					// frame_time := ticks - prev_time
-					// if frame_time < target_time {
-					// 	// DelayGUI(target_time - frame_time)
-					// }
-					// prev_time = ticks
-				} else {
-					SetSTATModeOAM()
-					if GetSTATINTOAM() {
-						interrupts.RequestInterruptSTAT()
-					}
+	if !GetLCDCEnable() {
+		SetLY(0)
+		current_dots = 0
+		stat := getSTAT()
+		stat &= 252
+		setSTAT(stat)
+		return
+	}
+	current_dots++
+	mode := GetModeSTAT()
+	switch mode {
+	case _MODE_HBLANK:
+		if current_dots >= _DOTS_PER_LINE {
+			IncrementLY()
+			current_dots = 0
+			if GetLY() >= _LY_VBLANK_START {
+				SetSTATModeVBlank()
+				interrupts.RequestInterruptVBlank()
+				if GetSTATINTVBlank() {
+					interrupts.RequestInterruptSTAT()
 				}
-				HDMATransfer()
-			}
-			break
-		case _MODE_VBLANK:
-			if current_dots >= _DOTS_PER_LINE {
-				IncrementLY()
-				current_dots = 0
-				if GetLY() > _LY_VBLANK_END {
-					SetLY(0)
-					ResetWindowLineCounter()
-					SetSTATModeOAM()
-					if GetSTATINTOAM() {
-						interrupts.RequestInterruptSTAT()
-					}
-				}
-			}
-			break
-		case _MODE_OAM:
-			if current_dots >= _MODE_OAM_SCAN_DOTS {
-				FetcherStart()
-				SetSTATModePixelDrawing()
-			}
-			if current_dots == 1 {
-				FetcherOamLoad()
-			}
-			break
-		case _MODE_PIXEL_DRAWING:
-			FetcherTick()
-
-			if FetcherGetPushedX() >= 160 || current_dots >= 289 {
-				// DrawScanline()
-				FetcherClearFIFO()
-				SetSTATModeHBlank()
-				// TODO: check if necessary
-				if GetSTATINTHBlank() {
+				current_frame++
+				// ticks := TicksGUI()
+				// frame_time := ticks - prev_time
+				// if frame_time < target_time {
+				// 	// DelayGUI(target_time - frame_time)
+				// }
+				// prev_time = ticks
+			} else {
+				SetSTATModeOAM()
+				if GetSTATINTOAM() {
 					interrupts.RequestInterruptSTAT()
 				}
 			}
-			break
-		default:
-			log.Fatalf("LCD tick mode not recognized %d\n", mode)
 		}
-		updateLYFlag()
+		break
+	case _MODE_VBLANK:
+		if current_dots >= _DOTS_PER_LINE {
+			IncrementLY()
+			current_dots = 0
+			if GetLY() > _LY_VBLANK_END {
+				SetLY(0)
+				ResetWindowLineCounter()
+				SetSTATModeOAM()
+				if GetSTATINTOAM() {
+					interrupts.RequestInterruptSTAT()
+				}
+			}
+		}
+		break
+	case _MODE_OAM:
+		if current_dots >= _MODE_OAM_SCAN_DOTS {
+			FetcherStart()
+			SetSTATModePixelDrawing()
+		}
+		if current_dots == 1 {
+			FetcherOamLoad()
+		}
+		break
+	case _MODE_PIXEL_DRAWING:
+		FetcherTick()
+
+		if FetcherGetPushedX() >= 160 {
+			// DrawScanline()
+			FetcherClearFIFO()
+			SetSTATModeHBlank()
+			HDMATransfer()
+			// TODO: check if necessary
+			if GetSTATINTHBlank() {
+				interrupts.RequestInterruptSTAT()
+			}
+		}
+		break
+	default:
+		log.Fatalf("LCD tick mode not recognized %d\n", mode)
 	}
+	updateLYFlag()
 }

@@ -286,10 +286,10 @@ func UpdateDMALength(leng uint) {
 	// TODO : check this one
 	// hdma5 := GetHDMA5()
 	// mode := hdma5 & 0b10000000
-	lcd_registers[_HDMA5-_REGISTER_BASE] = leng & 0b1111111
+	lcd_registers[_HDMA5-_REGISTER_BASE] = leng & 0x7F
 }
 func GetDMALength() uint {
-	return (GetHDMA5()&0b1111111 + 1) * 0x10
+	return (GetHDMA5()&0x7F + 1) * 0x10
 }
 func GetBGP() uint {
 	return ReadFromLCDMemory(_BGP)

@@ -47,10 +47,6 @@ func CanAccessVRAM() bool {
 	return GetModeSTAT() != _MODE_PIXEL_DRAWING
 }
 func ReadFromVRAMMemory(addr uint, bank ...uint) byte {
-	// mode := GetModeSTAT()
-	// if mode == _MODE_PIXEL_DRAWING {
-	// 	return 0xFF
-	// }
 	if !IsInVRAM(addr) {
 		log.Fatalf("Address not in VRAM %04X\n", addr)
 	}
@@ -61,14 +57,10 @@ func ReadFromVRAMMemory(addr uint, bank ...uint) byte {
 	return _VRAM[b][addr-_VRAM_START_ADDR]
 }
 func WriteToVRAMMemory(addr uint, value byte, bank ...uint) {
-	mode := GetModeSTAT()
-	if mode == _MODE_PIXEL_DRAWING {
-		// return
-	}
 	if !IsInVRAM(addr) {
 		log.Fatalf("Address not in VRAM %04X\n", addr)
 	}
-	b := GetVRAMBank() & 1
+	b := GetVRAMBank()
 	if len(bank) == 1 {
 		b = bank[0]
 	}
@@ -82,16 +74,9 @@ func ReadFromOAMMemory(addr uint) byte {
 	if !IsInOAM(addr) {
 		log.Fatalf("Address not in OAM %04X (Read)\n", addr)
 	}
-	if addr == 0xFE00 {
-		// utility.WaitHere("writing to FE00")
-	}
 	return _OAM[addr-_OAM_START_ADDR]
 }
 func WriteToOAMMemory(addr uint, value byte) {
-	// mode := GetModeSTAT()
-	// if mode == 2 {
-	// 	return
-	// }
 	if !IsInOAM(addr) {
 		log.Fatalf("Address not in OAM %04X (Write)\n", addr)
 	}

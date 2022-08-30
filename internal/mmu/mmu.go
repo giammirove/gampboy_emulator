@@ -392,9 +392,6 @@ func WriteToMemory(addr uint, value uint, bytes ...uint) {
 }
 
 func writeByteMemoryCPU(addr uint, value byte) {
-	// if ppu.GetDMATransferring() && (addr < _HRAM_START || addr > _HRAM_END) {
-	// 	return
-	// }
 	switch addr & 0xF000 {
 	case 0x0:
 		fallthrough
@@ -417,7 +414,7 @@ func writeByteMemoryCPU(addr uint, value byte) {
 	case 0x8000:
 		fallthrough
 	case 0x9000:
-		if ppu.GetDMATransferring() {
+		if !ppu.CanAccessVRAM() || ppu.GetDMATransferring() {
 			return
 		}
 		ppu.WriteToVRAMMemory(addr, value)

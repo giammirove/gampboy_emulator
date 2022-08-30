@@ -26,6 +26,7 @@ const _TAC_I = 3
 const _RESET_TIME_CLOCK = 4
 
 var div_internal = uint(0)
+var div_clock = uint(0)
 var tima_clock = 0
 
 var resetting_tima = false
@@ -54,7 +55,8 @@ func Tick() {
 	div_internal++
 	// increment div every 64 m-cycles
 	// TODO: why with 63 works???
-	if div_internal%(63*4) == 0 {
+	if div_internal >= 0xFF {
+		div_internal -= 0xFF
 		registers[_DIV_I] = (registers[_DIV_I] + 1) & 0xFFFF
 	}
 	// TODO: handle different cpu speed
@@ -73,10 +75,12 @@ func Tick() {
 			resetting_tima_ticks = 0
 		}
 		resetting_tima_ticks++
-	} else if div_internal%freq == 0 && GetTACEnable() {
-		stepTIMA()
-		registers[_DIV_I] = 0
-		div_internal = 0
+	} else if GetTACEnable() {
+		div_clock++
+		if div_clock >= freq {
+			stepTIMA()
+			div_clock -= freq
+		}
 	}
 
 }
@@ -90,12 +94,12 @@ func ReadFromMemory(addr uint) uint {
 		log.Fatalf("Invalid timer address (0x%8X)", addr)
 	}
 	ret := registers[addr-_START_ADDR]
-	// reset every time
-	if addr == _DIV {
-		// ret = ret >> 8
-	}
 	if addr == _TAC {
+		prev_freq := GetClockFreq()
 		ret = ret | 0b11111000
+		if GetClockFreq() != prev_freq {
+			div_clock = 0
+		}
 	}
 	return ret
 }
