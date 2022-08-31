@@ -201,23 +201,23 @@ func WriteToRamMemory(addr uint, value uint8) {
 	// }
 
 	if addr >= _ERAM_START && addr <= _ERAM_END {
-		if ram_enabled {
-			if headers.IsMBC3() {
-				// if rtc_active {
-				if ram_bank >= 0x8 {
-					rtc_registers[rtc] = value
-					return
-				}
+		if headers.IsMBC3() {
+			if ram_bank >= 0x8 {
+				rtc_registers[rtc] = value
+				return
 			}
 			off := addr - _ERAM_START + ram_bank*_RAM_BANK_SIZE
-			// prev := ERAM_BANKS[off]
 			ERAM_BANKS[off] = value
 			save_needed = true
-			// if banking_mode {
-			// 	SaveMemory()
-			// }
 			return
 		}
+		if ram_enabled {
+			off := addr - _ERAM_START + ram_bank*_RAM_BANK_SIZE
+			ERAM_BANKS[off] = value
+			save_needed = true
+			return
+		}
+		return
 	}
 
 	log.Fatalf("Not handled %04X (RAM)\n", addr)
